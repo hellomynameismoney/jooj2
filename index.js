@@ -1,5 +1,5 @@
 import http from "http";
-import { fetch } from "undici";
+
 
 const TARGET_BASE = (process.env.TARGET_DOMAIN || "https://nima.feri2020.ir").replace(/\/$/, "");
 
