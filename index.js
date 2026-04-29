@@ -1,4 +1,5 @@
 import http from "http";
+import { fetch } from "undici";
 
 const TARGET_BASE = (process.env.TARGET_DOMAIN || "https://nima.feri2020.ir").replace(/\/$/, "");
 
@@ -19,13 +20,13 @@ const STRIP_HEADERS = new Set([
 ]);
 
 const server = http.createServer(async (req, res) => {
-  if (!TARGET_BASE) {
-    res.writeHead(500);
-    return res.end("TARGET_DOMAIN not set");
-  }
-
   try {
-    // 🔥 FIX: proper URL handling for Node
+    if (!TARGET_BASE) {
+      res.writeHead(500);
+      return res.end("TARGET_DOMAIN not set");
+    }
+
+    // 🔥 FIX: proper URL building
     const targetUrl = TARGET_BASE + req.url;
 
     const headers = {};
@@ -48,31 +49,30 @@ const server = http.createServer(async (req, res) => {
       headers["x-forwarded-for"] = clientIp;
     }
 
-    const options = {
-      method: req.method,
-      headers,
-    };
-
     const hasBody = req.method !== "GET" && req.method !== "HEAD";
 
+    // 🔥 FIX: convert Node stream → fetch body
+    const body = hasBody ? req : undefined;
+
     const response = await fetch(targetUrl, {
-      ...options,
-      body: hasBody ? req : undefined,
+      method: req.method,
+      headers,
+      body,
     });
 
     res.writeHead(response.status, Object.fromEntries(response.headers));
 
-    const reader = response.body?.getReader();
-
-    if (!reader) {
+    if (!response.body) {
       const text = await response.text();
       return res.end(text);
     }
 
+    const reader = response.body.getReader();
+
     const pump = async () => {
       const { done, value } = await reader.read();
       if (done) return res.end();
-      res.write(value);
+      res.write(Buffer.from(value));
       pump();
     };
 
