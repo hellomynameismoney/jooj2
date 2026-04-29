@@ -3,7 +3,9 @@ import rateLimit from "express-rate-limit";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
+app.get("/", (req, res) => {
+  res.send("Proxy is running OK");
+});
 // ===== CONFIG =====
 const TARGET_BASE = (process.env.TARGET_DOMAIN || "").replace(/\/$/, "");
 const API_KEY = process.env.API_KEY || null;
