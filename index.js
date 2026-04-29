@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 3000;
 // ===== CONFIG =====
 const TARGET_BASE = (process.env.TARGET_DOMAIN || "").replace(/\/$/, "");
 const API_KEY = process.env.API_KEY || null;
-
+app.set("trust proxy", 1);
 // ===== RATE LIMIT =====
 app.use(rateLimit({
   windowMs: 60 * 1000,
